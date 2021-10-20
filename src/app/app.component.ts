@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { GoogleMap } from '@angular/google-maps';
 
 import { BehaviorSubject, Observable, of as observableOf } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { auditTime, catchError, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -12,13 +13,13 @@ import { catchError, map } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   private readonly API_KEY: string = '';
   @ViewChild('interactions', { static: true }) private interactionDiv!: ElementRef<HTMLDivElement>;
+  @ViewChild(GoogleMap, { static: false }) private _map: GoogleMap | undefined;
 
   mapApiLoaded$!: Observable<boolean>;
-  // see: https://stackoverflow.com/a/32128865
   mapOptions: google.maps.MapOptions = {
-    disableDefaultUI: true,
+    // disableDefaultUI: true,
     keyboardShortcuts: false,
-    gestureHandling: 'none',
+    // gestureHandling: 'none',
     mapTypeId: 'hybrid',
     tilt: 0,
   };
@@ -31,6 +32,7 @@ export class AppComponent implements OnInit {
   private _zoomFactor = 1;
   private _zoom = new BehaviorSubject<number>(this.defaultZoom);
   zoom$ = this._zoom.asObservable();
+  // zoom$ = this._zoom.asObservable().pipe(auditTime(16));
 
   constructor(private readonly httpClient: HttpClient) {
     this.mapApiLoaded$ = this.httpClient
@@ -51,6 +53,9 @@ export class AppComponent implements OnInit {
 
       const zoomDelta = Math.log2(this._zoomFactor);
       this._zoom.next(this.defaultZoom + zoomDelta);
+
+      // this is not working...
+      // google.maps.event.trigger(this._map, 'wheel', evt)
 
       evt.preventDefault();
       evt.stopPropagation();
